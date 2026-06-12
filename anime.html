@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anime Hub Private Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700;800;900&family=Noto+Sans+KR:wght=400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-body: #0a0b0d;
+            --bg-side: #111317;
+            --bg-panel: #181a20;
+            --bg-input: #22252e;
+            --border-color: #2b2f3a;
+            --text-primary: #f5f6f7;
+            --text-secondary: #949aab;
+            --accent-color: #6366f1;
+            
+            --tier-s: #ef4444;
+            --tier-ap: #ec4899;
+            --tier-a: #f97316;
+            --tier-b: #10b981;
+            --tier-c: #3b82f6;
+            --tier-f: #6b7280;
+            --tier-sip: #f59e0b;
+            --tier-drop: #4b5563;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Noto Sans KR', sans-serif; }
+        body { background-color: var(--bg-body); color: var(--text-primary); -webkit-font-smoothing: antialiased; display: flex; min-height: 100vh; overflow: hidden; }
+
+        /* 사이드바 */
+        .sidebar {
+            width: 260px; background-color: var(--bg-side); border-right: 1px solid var(--border-color);
+            display: flex; flex-direction: column; padding: 30px 20px; z-index: 10; flex-shrink: 0;
+        }
+        .brand-zone { margin-bottom: 40px; padding-left: 10px; }
+        .brand-zone h1 { font-size: 1.3rem; font-weight: 800; letter-spacing: 1px; color: #fff; }
+        .brand-zone p { font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px; font-weight: 500; }
+
+        .menu-list { list-style: none; display: flex; flex-direction: column; gap: 8px; flex-grow: 1; }
+        .menu-item {
+            padding: 14px 16px; border-radius: 8px; font-size: 0.95rem; font-weight: 600;
+            color: var(--text-secondary); cursor: pointer; transition: all 0.2s ease;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .menu-item:hover { color: #fff; background-color: rgba(255,255,255,0.03); }
+        .menu-item.active { color: #fff; background-color: var(--accent-color); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+
+        .sidebar-laftel-shortcut {
+            margin-top: auto; padding: 12px; background: #1a1224; border: 1px solid #3c1e5c;
+            border-radius: 8px; display: flex; align-items: center; gap: 10px; color: #c084fc;
+            font-size: 0.85rem; text-decoration: none; font-weight: 700; transition: 0.2s;
+        }
+        .sidebar-laftel-shortcut:hover { background: #241435; border-color: #a855f7; }
+        .sidebar-laftel-icon { width: 22px; height: 22px; background: #a855f7; color:#fff; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:900; }
+
+        /* 메인 프레임 */
+        .main-content { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow-y: auto; }
+        .top-navbar {
+            padding: 20px 40px; border-bottom: 1px solid var(--border-color); background-color: rgba(10,11,13,0.5);
+            backdrop-filter: blur(20px); display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 5;
+        }
+        .page-title { font-size: 1.25rem; font-weight: 700; }
+        .stats-summary { display: flex; gap: 24px; font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); }
+        .stats-summary span strong { color: var(--text-primary); margin-left: 4px; }
+
+        /* 탭 구조 */
+        .tab-content { display: none; padding: 40px; max-width: 1400px; width: 100%; margin: 0 auto; }
+        .tab-content.active { display: block; animation: fadeIn 0.25s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        .panel { background-color: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; margin-bottom: 30px; }
+        .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; color: #fff; border-left: 4px solid var(--accent-color); padding-left: 12px; }
+        
+        /* 홈 배너 */
+        .ai-banner { background: linear-gradient(135deg, #1e1b4b 0%, #311042 100%); border: 1px solid #4338ca; border-radius: 16px; padding: 30px; margin-bottom: 30px; }
+        .ai-banner h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; color: #fff; }
+        .ai-banner p { font-size: 0.9rem; color: #c7d2fe; line-height: 1.6; }
+        
+        .recent-timeline { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 10px; }
+        .recent-mini-card { flex: 0 0 200px; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; cursor: pointer; transition: 0.2s; }
+        .recent-mini-card:hover { border-color: var(--accent-color); }
+        .recent-mini-img { width: 100%; height: 110px; object-fit: cover; }
+        .recent-mini-title { padding: 8px 12px; font-size: 0.8rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+
+        /* 입력 폼 공통 스타일 */
+        .form-layout { max-width: 720px; margin: 0 auto; }
+        .input-group { margin-bottom: 20px; }
+        .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        label { display: block; font-size: 0.85rem; font-weight: 600; color: #949aab; margin-bottom: 10px; }
+        input, select, textarea { width: 100%; padding: 12px 16px; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 0.9rem; transition: all 0.2s; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent-color); background-color: #292d38; }
+        .btn-mini { padding: 8px 16px; background: #2e323e; border: 1px solid var(--border-color); border-radius: 8px; color: #fff; font-size: 0.8rem; cursor: pointer; font-weight: 600; }
+        .btn-primary { width: 100%; padding: 16px; background: #5850ec; border: none; border-radius: 8px; color: #fff; font-weight: 700; font-size: 1rem; cursor: pointer; transition: background 0.2s; }
+        .btn-primary:hover { background-color: #4f46e5; }
+
+        /* 스텟 박스 디자인 */
+        .stat-indicators-box { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; background: #13151b; padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px; }
+        @media (max-width: 600px) { .stat-indicators-box { grid-template-columns: repeat(2, 1fr); } }
+        .stat-input-wrapper { display: flex; flex-direction: column; gap: 6px; }
+        .stat-input-wrapper label { margin-bottom: 0; font-size: 0.8rem; color: #949aab; }
+        .stat-input-wrapper input { padding: 10px; text-align: center; font-weight: bold; }
+
+        /* 태그 시스템 그룹 */
+        .tag-setup-container { background: #13151b; border: 1px solid var(--border-color); padding: 16px; border-radius: 8px; margin-bottom: 14px; }
+        .tag-pool { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+        .tag-chip { padding: 6px 14px; background: #22252e; border: 1px solid #2b2f3a; border-radius: 20px; font-size: 0.8rem; color: #949aab; cursor: pointer; user-select: none; transition: 0.2s; }
+        .tag-chip.selected { background: #312e81; border-color: #6366f1; color: #fff; }
+        .tag-adder-row { display: flex; gap: 8px; }
+        .tag-adder-row input { flex: 1; padding: 8px 14px; font-size: 0.85rem; }
+
+        /* 티어리스트 구조 */
+        .tier-matrix { display: flex; flex-direction: column; gap: 12px; }
+        .matrix-row { display: flex; background: #12141a; border-radius: 8px; border: 1px solid #1e2127; min-height: 110px; }
+        .row-label { width: 85px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 900; color: #000; border-radius: 7px 0 0 7px; flex-shrink: 0; text-align: center; padding: 5px; }
+        .t-s .row-label { background-color: var(--tier-s); }
+        .t-ap .row-label { background-color: var(--tier-ap); color: #fff; }
+        .t-a .row-label { background-color: var(--tier-a); }
+        .t-b .row-label { background-color: var(--tier-b); }
+        .t-c .row-label { background-color: var(--tier-c); }
+        .t-f .row-label { background-color: var(--tier-f); color: #fff; }
+        .t-sip .row-label { background-color: var(--tier-sip); color: #000; font-size: 0.9rem; }
+        .t-drop .row-label { background-color: var(--tier-drop); color: #fff; font-size: 0.9rem; }
+        .row-items { display: flex; align-items: center; gap: 12px; padding: 10px 20px; flex-wrap: wrap; }
+        
+        .tier-poster-wrapper { position: relative; width: 65px; height: 90px; border-radius: 6px; cursor: pointer; border: 1px solid #323746; transition: 0.2s; }
+        .tier-poster-wrapper:hover { transform: scale(1.1); border-color: #fff; z-index: 100; }
+        .tier-poster-wrapper img { width: 100%; height: 100%; object-fit: cover; border-radius: 5px; }
+
+        /* 라이브러리 상단 제어바 */
+        .library-header { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; padding-bottom: 14px; border-bottom: 1px solid var(--border-color); }
+        .view-mode-selector-bar { display: flex; gap: 10px; margin-bottom: 5px; }
+        .view-mode-btn { padding: 8px 16px; background: #1c1e24; border: 1px solid var(--border-color); color: var(--text-secondary); border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .view-mode-btn.active { background: var(--accent-color); color: #fff; border-color: var(--accent-color); }
+        
+        .filter-bar { display: flex; align-items: center; gap: 12px; width: 100%; flex-wrap: wrap; }
+        .filter-bar input { width: 220px; padding: 8px 14px; font-size: 0.85rem; }
+        .filter-bar select { width: 150px; padding: 8px 14px; font-size: 0.85rem; }
+        .filter-checkbox-wrapper { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--text-secondary); cursor: pointer; user-select: none; }
+        .filter-checkbox-wrapper input { width: auto; margin: 0; cursor: pointer; }
+        
+        .category-section { background: #12141c; border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+        .category-title { font-size: 0.95rem; font-weight: 700; color: #a5b4fc; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; background: rgba(99,102,241,0.08); padding: 8px 14px; border-radius: 6px; }
+        .matrix-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+        
+        .review-card { background: #1c1e24; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color); display: flex; flex-direction: column; transition: 0.2s; cursor: pointer; position: relative; }
+        .review-card:hover { border-color: var(--accent-color); transform: translateY(-3px); }
+        .card-img-wrapper { width: 100%; height: 150px; background: #0f1012; position: relative; }
+        .card-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+        .card-fav-star { position: absolute; top: 10px; left: 10px; font-size: 1.1rem; color: #fbbf24; z-index: 2; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .tier-indicator { position: absolute; top: 10px; right: 10px; font-size: 0.65rem; font-weight: 800; padding: 4px 8px; border-radius: 4px; color: #fff; }
+        .card-content { padding: 14px; display: flex; flex-direction: column; flex-grow: 1; gap: 6px; }
+        .card-content h3 { font-size: 0.95rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-stats { font-size: 0.75rem; color: var(--text-secondary); display: flex; justify-content: space-between; }
+        .card-stats .stars { color: #fbbf24; }
+
+        /* 메모리맵 컴포넌트 */
+        .memory-map-container { display: flex; gap: 24px; height: calc(100vh - 180px); overflow: hidden; position: relative; }
+        .memory-sidebar-list { width: 300px; background: #12141c; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex-shrink: 0; }
+        
+        .memory-accordion-group { border: 1px solid #222530; border-radius: 8px; background: #161822; overflow: hidden; }
+        .memory-accordion-header { padding: 10px 14px; background: #1f2230; font-size: 0.85rem; font-weight: 700; color: #a5b4fc; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+        .memory-accordion-content { padding: 8px; display: flex; flex-direction: column; gap: 6px; background: #12141c; }
+        .memory-accordion-content.collapsed { display: none; }
+
+        .memory-item-node { padding: 10px 12px; background: #1c1e24; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center; position: relative; }
+        .memory-item-node:hover { border-color: var(--accent-color); color: #fff; }
+        .node-delete-btn { background: transparent; border: none; color: #f87171; font-size: 0.75rem; cursor: pointer; padding: 2px 6px; border-radius: 4px; z-index: 10; }
+        .node-delete-btn:hover { background: rgba(248,113,113,0.1); }
+
+        /* 마우스 호버 커스텀 프리뷰 카드 팝업 */
+        .node-hover-preview-box {
+            position: fixed; width: 220px; background: #1e2230; border: 1px solid #4338ca; border-radius: 8px;
+            padding: 12px; display: none; flex-direction: column; gap: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            z-index: 5000; pointer-events: none;
+        }
+        .node-preview-img { width: 100%; height: 110px; object-fit: cover; border-radius: 4px; background: #000; }
+        .node-preview-title { font-size: 0.85rem; font-weight: 700; color: #fff; }
+        .node-preview-desc { font-size: 0.75rem; color: #bc99ff; line-height: 1.4; }
+
+        .map-workspace { flex: 1; background: #0d0f14; border: 1px solid var(--border-color); border-radius: 12px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 20px; }
+        
+        /* SVG 기반 실제 인터랙티브 라인 링크 매핑 스페이스 */
+        .map-svg-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: auto; z-index: 1; }
+        .map-interactive-line { stroke: #6366f1; stroke-width: 3; stroke-dasharray: 4; animation: dash 30s linear infinite; cursor: pointer; transition: stroke 0.2s; }
+        .map-interactive-line:hover { stroke: #f43f5e; stroke-width: 5; }
+        .line-text-element { fill: #f43f5e; font-size: 11px; font-weight: 700; cursor: pointer; background: #000; text-shadow: 0 2px 4px #000; }
+        @keyframes dash { to { stroke-dashoffset: -1000; } }
+
+        .map-canvas-mock { width: 100%; height: 100%; position: relative; border: 1px dashed rgba(255,255,255,0.05); border-radius: 8px; background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 0); background-size: 16px 16px; z-index: 2; pointer-events: none; }
+        
+        /* [요구사항 2] 실제 시각화 위치 고정형 컴포넌트: 작은 사진 + 제목 + 맵 제외 버튼 구조 가로 배치 */
+        .rendered-absolute-node {
+            position: absolute; display: flex; align-items: center; gap: 10px; padding: 8px 14px; 
+            background: linear-gradient(135deg, #1e1b4b, #311042); border: 2px solid #4338ca; border-radius: 12px; 
+            font-size: 0.8rem; font-weight: 700; color: #fff; box-shadow: 0 8px 20px rgba(0,0,0,0.5); 
+            cursor: pointer; pointer-events: auto; user-select: none; transition: transform 0.2s; min-width: 160px;
+        }
+        .rendered-absolute-node:hover { transform: scale(1.05); border-color: #818cf8; }
+        .rendered-absolute-node.selected-core { border-color: #ec4899; box-shadow: 0 0 15px rgba(236,72,153,0.6); }
+        
+        /* 맵 노드 내 들어갈 미니 썸네일 스타일 */
+        .node-mini-thumb { width: 32px; height: 32px; object-fit: cover; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; }
+        .node-mini-title { flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.8rem; color: #fff; text-align: left; }
+        
+        /* [요구사항 1] 맵 화면에서만 빼버리는 전용 닫기 단추 */
+        .node-map-remove-btn {
+            background: none; border: none; color: #949aab; font-size: 1.1rem; cursor: pointer; 
+            padding: 2px 6px; font-weight: bold; line-height: 1; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s;
+        }
+        .node-map-remove-btn:hover { color: #f87171; background: rgba(248,113,113,0.1); }
+
+        /* 모달 기반 오버레이 */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; overflow-y: auto; }
+        .modal-container-old { background: #111318; border: 1px solid #1f222a; width: 100%; max-width: 780px; border-radius: 12px; overflow: hidden; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.8); margin: auto; }
+        .modal-close-btn-old { position: absolute; top: 20px; right: 20px; width: 28px; height: 28px; background: #000; border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.9rem; z-index: 100; font-weight: bold; }
+        
+        /* 상단 와이드 배너 (클릭 가능 커서 변경) */
+        .modal-hero-banner { width: 100%; height: 210px; position: relative; background-size: cover; background-position: center; display: flex; align-items: flex-end; padding: 24px; cursor: pointer; }
+        .modal-hero-banner::before { content: ''; position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(17,19,24,1) 100%); }
+        .modal-hero-title-zone { position: relative; z-index: 10; display: flex; flex-direction: column; gap: 4px; }
+        .modal-hero-dots { display: flex; gap: 6px; margin-bottom: 8px; }
+        .modal-hero-dots span { width: 8px; height: 8px; border-radius: 50%; border: 2px solid #fff; display: inline-block; }
+        .modal-hero-title { font-size: 1.5rem; font-weight: 700; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.6); }
+
+        /* 메인 데이터 파트 2단 그리드 */
+        .modal-grid-layout { display: grid; grid-template-columns: 1fr 240px; gap: 16px; padding: 16px 24px 12px 24px; }
+        
+        .info-spec-card { background: #161920; border: 1px solid #20242e; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 12px; font-size: 0.9rem; color: #fff; justify-content: center; }
+        .info-spec-card p { display: flex; align-items: center; }
+        .info-spec-card p strong { width: 110px; color: var(--text-secondary); font-weight: 500; }
+        .info-spec-card p .value-highlight { color: #5850ec; font-weight: 600; }
+
+        /* 이미지 원본 팝업 라이트박스 */
+        .lightbox-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; z-index: 9999; cursor: zoom-out; }
+        .lightbox-img { max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 6px; box-shadow: 0 0 30px rgba(0,0,0,0.7); }
+
+        /* 편집 UI 레이아웃 카드 */
+        .edit-spec-card { background: #161920; border: 1px solid #20242e; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+        .edit-row-item { display: flex; align-items: center; gap: 10px; color: #f5f6f7; font-size: 0.85rem; }
+        .edit-row-item strong { width: 80px; color: #949aab; font-weight: 500; }
+        .edit-row-item select, .edit-row-item input { padding: 6px 10px; font-size: 0.85rem; background: #22252e; border: 1px solid #2b2f3a; border-radius: 6px; width: auto; flex: 1; }
+
+        /* 오각형 스텟 패널 박스 */
+        .radar-chart-box { background: #161920; border: 1px solid #20242e; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 16px; position: relative; min-height: 160px; }
+        
+        /* 외부 통합 연결용 허브 바 */
+        .external-links-hub-bar { margin: 0 24px 12px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .audio-mock-component { background: #14161d; border: 1px solid #1f222a; border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 12px; color: var(--text-secondary); font-size: 0.85rem; }
+        .audio-mock-icon { width: 24px; height: 24px; background: #1c1e26; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+        
+        .laftel-link-component { background: #1a1224; border: 1px solid #3c1e5c; border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 12px; color: #c084fc; font-size: 0.85rem; text-decoration: none; transition: 0.2s; }
+        .laftel-link-component:hover { background: #241435; border-color: #a855f7; }
+        .laftel-mock-icon { width: 24px; height: 24px; background: #a855f7; color: #fff; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 900; }
+
+        /* 한줄/종합평론 보드 공간 */
+        .main-comment-block-old { background: #14171d; border-left: 4px solid #5850ec; border-radius: 0 6px 6px 0; padding: 16px; font-size: 0.95rem; color: #fff; line-height: 1.5; margin: 0 24px 16px 24px; min-height: 54px; }
+        .main-comment-edit-box { margin: 0 24px 16px 24px; border: 1px dashed #4b5563; background: #14171d; padding: 12px; border-radius: 6px; }
+        .main-comment-edit-box label { font-size: 0.8rem; font-weight: 700; color: #f97316; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
+        .main-comment-edit-box textarea { background: transparent; border: none; padding: 0; font-size: 0.95rem; color: #fff; resize: vertical; border-radius: 0; }
+        .main-comment-edit-box textarea:focus { background: transparent; border: none; }
+
+        /* 자유 코멘트 스레드 메모장 */
+        .sub-comment-thread-zone { border-top: 1px solid #1f222a; padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; }
+        .sub-thread-title { font-size: 0.9rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px; }
+        .sub-thread-input-row { display: flex; gap: 10px; }
+        .sub-thread-input-row input { flex: 1; padding: 10px 14px; background: #161920; border: 1px solid #20242e; border-radius: 6px; font-size: 0.85rem; color:#fff; }
+        .sub-thread-btn { background: #5850ec; border: none; padding: 0 18px; border-radius: 6px; color: #fff; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .sub-thread-btn:hover { background: #4f46e5; }
+        
+        .sub-thread-feed-list { display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto; }
+        .thread-memo-item { background: #161920; border: 1px solid #20242e; border-radius: 6px; padding: 10px 14px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: flex-start; }
+        .thread-memo-text { color: #d1d5db; line-height: 1.4; white-space: pre-wrap; word-break: break-all; }
+        .thread-memo-del { background: transparent; border: none; color: #ef4444; font-size: 0.75rem; cursor: pointer; font-weight: 500; margin-left: 10px; flex-shrink: 0; }
+        
+        .modal-footer-old { padding: 16px 24px 24px 24px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #1f222a; background: #111318; }
+        .fav-btn-old { background: transparent; border: 1px solid #fbbf24; color: #fbbf24; padding: 10px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
+        .fav-btn-old.active { background: rgba(251, 191, 36, 0.1); color: #fbbf24; }
+        .delete-btn-old { background: transparent; border: none; color: #f87171; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="brand-zone">
+            <h1>ANIME HUB</h1>
+            <p>MY PRIVATE PLATFORM</p>
+        </div>
+        <ul class="menu-list">
+            <li id="menu-home" class="menu-item active" onclick="switchTab('home')">🏠 홈 & 취향 피드</li>
+            <li id="menu-editor" class="menu-item" onclick="switchTab('editor')">✍️ 애니 평가 추가</li>
+            <li id="menu-tierlist" class="menu-item" onclick="switchTab('tierlist')">🏆 애니메이션 티어리스트</li>
+            <li id="menu-library" class="menu-item" onclick="switchTab('library')">📚 라이브러리</li>
+            <li id="menu-memorymap" class="menu-item" onclick="switchTab('memorymap')">🧠 메모리맵</li>
+        </ul>
+        
+        <a href="https://laftel.net" target="_blank" class="sidebar-laftel-shortcut">
+            <div class="sidebar-laftel-icon">LA</div>
+            <span>라프텔 공식 홈 바로가기 🚀</span>
+        </a>
+    </nav>
+
+    <div class="main-content">
+        <header class="top-navbar">
+            <div class="page-title" id="currentMenuTitle">🏠 홈 & 취향 분석 피드</div>
+            <div class="stats-summary">
+                <span>총 아카이빙<strong><span id="totalCount">0</span>편</strong></span>
+                <span>즐겨찾기<strong><span id="favCount">0</span>편</strong></span>
+            </div>
+        </header>
+
+        <section id="tab-home" class="tab-content active">
+            <div class="ai-banner">
+                <h2>AI 기반 나만의 맞춤 가이드 🤖</h2>
+                <p id="aiAnalysisText">리뷰 취향 분석 엔진을 동기화 중입니다. 에피소드 로그를 등록해보세요.</p>
+            </div>
+            <h3 class="section-title">⏱️ 최근 아카이빙 에피소드 로그</h3>
+            <div class="recent-timeline" id="recentTimelineContainer"></div>
+        </section>
+
+        <section id="tab-editor" class="tab-content">
+            <div class="form-layout panel">
+                <h3 class="section-title" style="border-left-color: #5850ec;">│ 애니 평가 추가</h3>
+                <form id="reviewForm" onsubmit="handleFormSubmit(event)">
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>애니메이션 타이틀</label>
+                            <input type="text" id="animeTitle" placeholder="예: 주술회전 2기" required>
+                        </div>
+                        <div class="input-group">
+                            <label>시리즈 직접 추가 / 확장</label>
+                            <div style="display:flex; gap:8px;">
+                                <input type="text" id="animeCategory" placeholder="시리즈 그룹명" required>
+                                <button type="button" class="btn-mini" style="background:#374151; width:60px;" onclick="alert('그룹 자동 매칭 필드가 활성화되었습니다.')">추가</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>지정 카테고리 (시리즈 매칭 필드)</label>
+                        <select id="animeCategorySelect" onchange="document.getElementById('animeCategory').value = this.value">
+                            <option value="독립 단편작 (그룹 없음)">독립 단편작 (그룹 없음)</option>
+                            <option value="귀멸의 칼날">귀멸의 칼날</option>
+                            <option value="주술회전">주술회전</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label>작품 포스터 업로드</label>
+                        <div style="border: 2px dashed var(--border-color); padding: 20px; text-align: center; border-radius: 8px; background: #13151b; font-size: 0.85rem; color: #949aab;">
+                            <input type="url" id="animeImage" placeholder="https://... 포스터 이미지 웹 주소를 복사해 넣으세요." style="width:90%;">
+                        </div>
+                    </div>
+
+                    <label>감상 디테일 스텟 지표 설정 (1점 ~ 10점 만족도)</label>
+                    <div class="stat-indicators-box">
+                        <div class="stat-input-wrapper">
+                            <label>재미</label>
+                            <input type="number" id="stFun" min="1" max="10" value="7" required>
+                        </div>
+                        <div class="stat-input-wrapper">
+                            <label>몰입도</label>
+                            <input type="number" id="stImmerse" min="1" max="10" value="7" required>
+                        </div>
+                        <div class="stat-input-wrapper">
+                            <label>작화/연출</label>
+                            <input type="number" id="stArt" min="1" max="10" value="7" required>
+                        </div>
+                        <div class="stat-input-wrapper">
+                            <label>음악/OST</label>
+                            <input type="number" id="stMusic" min="1" max="10" value="7" required>
+                        </div>
+                        <div class="stat-input-wrapper" style="margin-top:10px; grid-column: span 1;">
+                            <label>캐릭터성</label>
+                            <input type="number" id="stChar" min="1" max="10" value="7" required>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>유튜브 뮤직 OST 링크</label>
+                        <input type="url" id="animeMusicLink" placeholder="https://music.youtube.com/watch?v=...">
+                    </div>
+
+                    <div class="input-group">
+                        <label>라프텔(Laftel) 작품 감상 링크 URL</label>
+                        <input type="url" id="animeLaftelLink" placeholder="https://laftel.net/item/...">
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>매겨진 별점</label>
+                            <select id="animeRating">
+                                <option value="5">★★★★★</option>
+                                <option value="4">★★★★☆</option>
+                                <option value="3">★★★☆☆</option>
+                                <option value="2">★★☆☆☆</option>
+                                <option value="1">★☆☆☆☆</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>배치할 세분화 티어</label>
+                            <select id="animeTier">
+                                <option value="S-Tier">S-Tier</option>
+                                <option value="A+-Tier">A+-Tier</option>
+                                <option value="A-Tier">A-Tier</option>
+                                <option value="B-Tier">B-Tier</option>
+                                <option value="C-Tier">C-Tier</option>
+                                <option value="F-Tier">F-Tier</option>
+                                <option value="1화찍먹">1화찍먹</option>
+                                <option value="보다하차">보다하차</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>총 정주행 회독수</label>
+                        <input type="number" id="animeWatchCount" min="1" value="1" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label>태그 설정</label>
+                        <div class="tag-setup-container">
+                            <div class="tag-pool" id="editorTagPool">
+                                <div class="tag-chip" onclick="toggleTagSelector(this)">액션</div>
+                                <div class="tag-chip" onclick="toggleTagSelector(this)">판타지</div>
+                                <div class="tag-chip" onclick="toggleTagSelector(this)">개그</div>
+                                <div class="tag-chip" onclick="toggleTagSelector(this)">SF</div>
+                                <div class="tag-chip" onclick="toggleTagSelector(this)">다크 히어로</div>
+                                <div class="tag-chip" onclick="toggleTagSelector(this)">로맨스</div>
+                                <div class="tag-chip" onclick="toggleTagSelector(this)">명작</div>
+                            </div>
+                            <div class="tag-adder-row">
+                                <input type="text" id="newTagInput" placeholder="새 태그 입력">
+                                <button type="button" class="btn-mini" onclick="addNewTagToPool()">추가</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>종합 후기 및 평론</label>
+                        <textarea id="animeComment" rows="4" placeholder="나만의 날카로운 평론을 자유롭게 기록해 보세요."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-primary">데이터 허브에 안전하게 보관</button>
+                </form>
+            </div>
+        </section>
+
+        <section id="tab-tierlist" class="tab-content">
+            <div class="panel">
+                <h3 class="section-title">애니메이션 티어리스트 맵</h3>
+                <div class="tier-matrix">
+                    <div class="matrix-row t-s"><div class="row-label">S</div><div class="row-items" id="vTierS"></div></div>
+                    <div class="matrix-row t-ap"><div class="row-label">A+</div><div class="row-items" id="vTierAP"></div></div>
+                    <div class="matrix-row t-a"><div class="row-label">A</div><div class="row-items" id="vTierA"></div></div>
+                    <div class="matrix-row t-b"><div class="row-label">B</div><div class="row-items" id="vTierB"></div></div>
+                    <div class="matrix-row t-c"><div class="row-label">C</div><div class="row-items" id="vTierC"></div></div>
+                    <div class="matrix-row t-f"><div class="row-label">F</div><div class="row-items" id="vTierF"></div></div>
+                    <div class="matrix-row t-sip"><div class="row-label">1화 찍먹</div><div class="row-items" id="vTierSIP"></div></div>
+                    <div class="matrix-row t-drop"><div class="row-label">보다 하차</div><div class="row-items" id="vTierDROP"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-library" class="tab-content">
+            <div class="panel">
+                <div class="library-header">
+                    <div class="view-mode-selector-bar">
+                        <button id="btnViewSeries" class="view-mode-btn active" onclick="setLibraryViewMode('series')">📂 시리즈 나누어서 보기</button>
+                        <button id="btnViewAll" class="view-mode-btn" onclick="setLibraryViewMode('all')">👁️ 모든 애니메이션 보기</button>
+                    </div>
+                    
+                    <div class="filter-bar">
+                        <input type="text" id="searchBar" placeholder="🔍 타이틀 검색...">
+                        <select id="sortSelect" onchange="renderLibrary()">
+                            <option value="latest">최신 등록순</option>
+                            <option value="ratingDesc">별점 높은순</option>
+                            <option value="ratingAsc">별점 낮은순</option>
+                        </select>
+                        
+                        <label class="filter-checkbox-wrapper">
+                            <input type="checkbox" id="chkOnlyFav" onchange="renderLibrary()"> ⭐ 즐겨찾기만 보기
+                        </label>
+                        <label class="filter-checkbox-wrapper" id="tagGroupFilterWrapper" style="display:none;">
+                            <input type="checkbox" id="chkGroupWithTags" onchange="renderLibrary()"> 🏷️ 태그별로 묶어보기
+                        </label>
+                    </div>
+                </div>
+                <div id="archiveDynamicContainer"></div>
+            </div>
+        </section>
+
+        <section id="tab-memorymap" class="tab-content">
+            <div class="memory-map-container">
+                <div class="memory-sidebar-list">
+                    <button class="btn-primary" style="padding:10px; font-size:0.85rem; margin-bottom:10px;" onclick="openBlockAddModal()">➕ 블록 추가</button>
+                    <div id="memoryMapSidebar"></div>
+                </div>
+                
+                <div class="map-workspace">
+                    <svg class="map-svg-layer" id="mapSvgLayer"></svg>
+                    <div class="map-canvas-mock" id="mapCanvasWorkspace"></div>
+                    <div style="color: var(--text-secondary); font-size: 0.8rem; pointer-events:none; position:absolute; bottom:15px; left:15px; z-index:100;">
+                        💡 가이드: 왼쪽 리스트 블록 클릭 ➡️ 맵 배치 | 블록 1회 클릭 후 다른 블록 클릭 ➡️ 선 연결 | 선 클릭 ➡️ 이름 지정 | 블록 더블클릭 ➡️ 상세 정보 모달
+                    </div>
+                </div>
+                
+                <div class="node-hover-preview-box" id="nodeHoverPreview">
+                    <img src="" class="node-preview-img" id="hpImg">
+                    <div class="node-preview-title" id="hpTitle" style="font-weight:900; color:#fff;"></div>
+                    <div class="node-preview-desc" id="hpDesc"></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="lightbox-overlay" id="globalLightbox" onclick="this.style.display='none'">
+        <img src="" class="lightbox-img" id="lightboxTargetImg">
+    </div>
+
+    <div class="modal-overlay" id="blockModalOverlay" onclick="closeBlockModal(event)">
+        <div class="modal-container-old" style="max-width:500px; padding:24px;">
+            <div class="modal-close-btn-old" onclick="document.getElementById('blockModalOverlay').style.display='none'">&times;</div>
+            <h3 class="section-title" id="blockModalTitle">🧠 블록 설정창</h3>
+            <input type="hidden" id="mbId">
+            <div class="input-group">
+                <label>제목</label>
+                <input type="text" id="mbTitle" placeholder="예: 무한열차 결전 노드">
+            </div>
+            <div class="input-group">
+                <label>사진 (이미지 URL)</label>
+                <input type="url" id="mbImage" placeholder="https://...">
+            </div>
+            <div class="input-group">
+                <label>관련 애니 (겹치면 폴더 자동 연동)</label>
+                <input type="text" id="mbAnime" placeholder="예: 귀멸의 칼날">
+            </div>
+            <div class="input-group">
+                <label>설명</label>
+                <textarea id="mbDesc" rows="3" placeholder="블록 정보 기술"></textarea>
+            </div>
+            <button class="btn-primary" onclick="submitCustomBlockData()">만들기 (저장)</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="blockDetailOverlay" onclick="if(event.target.id==='blockDetailOverlay') this.style.display='none'">
+        <div class="modal-container-old" style="max-width:550px; overflow:hidden;">
+            <div class="modal-close-btn-old" onclick="document.getElementById('blockDetailOverlay').style.display='none'">&times;</div>
+            <div style="padding:24px; display:flex; flex-direction:column; gap:16px;">
+                <h3 class="section-title" style="margin-bottom:5px;">🧠 블록 상세정보</h3>
+                
+                <div style="display:flex; gap:16px; align-items:flex-start;">
+                    <img src="" id="bdImg" style="width:130px; height:180px; object-fit:cover; border-radius:6px; background:#000; border:1px solid var(--border-color); cursor:pointer;" title="클릭하면 크게 봅니다." onclick="triggerLightbox(this.src)">
+                    <div style="flex:1; display:flex; flex-direction:column; gap:10px; color:#fff; font-size:0.9rem;">
+                        <div><strong>제목:</strong> <span id="bdTitle" style="font-weight:700; color:#fff; margin-left:6px;"></span></div>
+                        <div><strong>관련 애니:</strong> <span id="bdAnime" style="color:#a5b4fc; margin-left:6px;"></span></div>
+                        <div style="border-top:1px solid #242835; padding-top:10px; margin-top:5px;">
+                            <strong style="display:block; margin-bottom:4px; color:var(--text-secondary);">설명:</strong>
+                            <p id="bdDesc" style="font-size:0.85rem; color:#d1d5db; line-height:1.4; white-space:pre-wrap;"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid #242835; padding-top:16px; margin-top:10px;">
+                    <button class="btn-mini" id="bdEditBtn" style="background:var(--accent-color); padding:8px 20px;">수정하기</button>
+                    <button class="btn-mini" id="bdCloseBtn" style="background:#374151;" onclick="document.getElementById('blockDetailOverlay').style.display='none'">닫기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="lineModalOverlay" onclick="if(event.target.id==='lineModalOverlay') this.style.display='none'">
+        <div class="modal-container-old" style="max-width:400px; padding:20px;">
+            <h3 class="section-title">🔗 연결 관계명 지정</h3>
+            <input type="hidden" id="targetLineId">
+            <div class="input-group">
+                <label>선 이름 (관계 설명)</label>
+                <input type="text" id="lineNameInput" placeholder="예: 세계관 연동 / 전투 관계">
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-primary" style="padding:10px;" onclick="saveLineName()">저장</button>
+                <button class="btn-mini" style="background:#ef4444;" onclick="deleteLineLink()">연결선 끊기</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="detailModalOverlay" onclick="closeDetailModal(event)">
+        <div class="modal-container-old">
+            <div class="modal-close-btn-old" onclick="document.getElementById('detailModalOverlay').style.display='none'">&times;</div>
+            
+            <div class="modal-hero-banner" id="lOldHeroBanner" style="background-image: url('');" title="배너 이미지를 누르면 원본 사진이 크게 나옵니다." onclick="triggerLightboxFromHero()">
+                <div class="modal-hero-title-zone">
+                    <div class="modal-hero-dots"><span></span><span></span><span></span><span></span></div>
+                    <div class="modal-hero-title" id="lOldTitle">애니메이션 타이틀</div>
+                </div>
+            </div>
+
+            <div id="libModalViewZone">
+                <div class="modal-grid-layout">
+                    <div class="info-spec-card">
+                        <p><strong>티어:</strong> <span id="lOldTier" style="font-weight:700; color:#ef4444;">S-Tier</span></p>
+                        <p><strong>평점:</strong> <span id="lOldRating" style="color:#fbbf24;">★★★★★</span></p>
+                        <p><strong>정주행 횟수:</strong> <span id="lOldWatch" style="font-weight:600;">1</span>회독 수행</p>
+                        <p><strong>그룹 카테고리:</strong> <span id="lOldCat" class="value-highlight">시리즈 그룹</span></p>
+                    </div>
+                    <div class="radar-chart-box">
+                        <svg width="140" height="140" viewBox="0 0 120 120" id="viewRadarSvg"></svg>
+                    </div>
+                </div>
+                
+                <div class="external-links-hub-bar">
+                    <div class="audio-mock-component">
+                        <div class="audio-mock-icon">🎧</div>
+                        <span id="lOldMusicText">연동 음원 없음</span>
+                    </div>
+                    <a href="#" target="_blank" class="laftel-link-component" id="lOldLaftelBtn">
+                        <div class="laftel-mock-icon">LA</div>
+                        <span id="lOldLaftelText">라프텔로 즉시 감상하기 🚀</span>
+                    </a>
+                </div>
+
+                <div class="main-comment-block-old" id="lOldComment"></div>
+            </div>
+
+            <div id="libModalEditZone" style="display:none;">
+                <div class="modal-grid-layout">
+                    <div class="edit-spec-card">
+                        <div class="edit-row-item">
+                            <strong>상태분류:</strong>
+                            <select id="leTier" onchange="updateLiveRadarChart()">
+                                <option value="S-Tier">S-Tier</option><option value="A+-Tier">A+-Tier</option><option value="A-Tier">A-Tier</option><option value="B-Tier">B-Tier</option><option value="C-Tier">C-Tier</option><option value="F-Tier">F-Tier</option><option value="1화찍먹">1화찍먹</option><option value="보다하차">보다하차</option>
+                            </select>
+                        </div>
+                        <div class="edit-row-item">
+                            <strong>시리즈:</strong>
+                            <input type="text" id="leCat">
+                        </div>
+                        <div class="edit-row-item">
+                            <strong>평점:</strong>
+                            <select id="leRating">
+                                <option value="5">★★★★★</option><option value="4">★★★★☆</option><option value="3">★★★☆☆</option><option value="2">★★☆☆☆</option><option value="1">★☆☆☆☆</option>
+                            </select>
+                        </div>
+                        <div class="edit-row-item">
+                            <strong>정주행:</strong>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <input type="number" id="leWatch" style="width:55px; text-align:center;" min="1">
+                                <span>회독</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="radar-chart-box" style="flex-direction:column; gap:6px; padding:10px;">
+                        <svg width="100" height="100" viewBox="0 0 120 120" id="editRadarSvg"></svg>
+                        <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:3px; font-size:0.65rem; width:100%; text-align:center;">
+                            <div>재미<input type="number" id="leStFun" min="1" max="10" style="width:100%; padding:2px; font-size:10px;" oninput="updateLiveRadarChart()"></div>
+                            <div>몰입<input type="number" id="leStImmerse" min="1" max="10" style="width:100%; padding:2px; font-size:10px;" oninput="updateLiveRadarChart()"></div>
+                            <div>작화<input type="number" id="leStArt" min="1" max="10" style="width:100%; padding:2px; font-size:10px;" oninput="updateLiveRadarChart()"></div>
+                            <div>음악<input type="number" id="leStMusic" min="1" max="10" style="width:100%; padding:2px; font-size:10px;" oninput="updateLiveRadarChart()"></div>
+                            <div>캐릭<input type="number" id="leStChar" min="1" max="10" style="width:100%; padding:2px; font-size:10px;" oninput="updateLiveRadarChart()"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="external-links-hub-bar">
+                    <div class="audio-mock-component">
+                        <div class="audio-mock-icon">🎵</div>
+                        <input type="url" id="leMusicLink" placeholder="유튜브 OST 링크 편집" style="background:transparent; border:none; padding:0; font-size:0.8rem; color:#fff; width:100%;">
+                    </div>
+                    <div class="laftel-link-component" style="background:#13151b; border-color:var(--border-color);">
+                        <div class="laftel-mock-icon" style="background:#4b5563;">URL</div>
+                        <input type="url" id="leLaftelLink" placeholder="라프텔 URL 링크 편집" style="background:transparent; border:none; padding:0; font-size:0.8rem; color:#fff; width:100%;">
+                    </div>
+                </div>
+
+                <div class="main-comment-edit-box">
+                    <label>📝 종합 평론 편집기</label>
+                    <textarea id="leComment" rows="3"></textarea>
+                </div>
+            </div>
+
+            <div class="sub-comment-thread-zone">
+                <div class="sub-thread-title">💭 자유 코멘트 스레드 메모장</div>
+                <div class="sub-thread-input-row">
+                    <input type="text" id="threadMemoInput" placeholder="새 코멘트/메모를 입력하세요.">
+                    <button type="button" class="sub-thread-btn" onclick="submitThreadMemo()">기록</button>
+                </div>
+                <div id="threadMemosContainer"></div>
+            </div>
+
+            <div class="modal-footer-old">
+                <button id="libFavBtn" class="fav-btn-old" onclick="toggleLibFavorite()">★ 즐겨찾기 설정</button>
+                <div style="display:flex; gap:12px; align-items:center;">
+                    <button id="libToggleEditBtn" class="btn-mini" style="background:#5850ec; padding:10px 20px;" onclick="enableLibEditMode()">수정하기</button>
+                    <button id="libSaveBtn" class="btn-mini" style="background:#10b981; padding:10px 20px; display:none;" onclick="saveLibEdit()">확인</button>
+                    <button id="libDelBtn" class="delete-btn-old" onclick="deleteLibArchive()">⚠️ 데이터 완전삭제</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let reviews = JSON.parse(localStorage.getItem('animeReviews')) || [];
+        let customBlocks = JSON.parse(localStorage.getItem('customMemoryBlocks')) || [];
+        let blockLinks = JSON.parse(localStorage.getItem('memoryBlockLinks')) || [];
+
+        let currentLibViewMode = 'series';
+        let openCollapsedGroups = {}; 
+
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById('searchBar').addEventListener('input', renderLibrary);
+            renderAll();
+        });
+
+        function triggerLightbox(imgUrl) {
+            if(!imgUrl || imgUrl.includes('linear-gradient')) return;
+            const lb = document.getElementById('globalLightbox');
+            const lbImg = document.getElementById('lightboxTargetImg');
+            lbImg.src = imgUrl;
+            lb.style.display = 'flex';
+        }
+
+        function triggerLightboxFromHero() {
+            if(!currentActiveLibId) return;
+            const item = reviews.find(r => r.id === currentActiveLibId);
+            if(item && item.image) {
+                triggerLightbox(item.image);
+            }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            document.getElementById(`menu-${tabId}`).classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+
+            const titleMap = { home: "🏠 홈 & 취향 분석 피드", editor: "✍️ 애니 평가 추가", tierlist: "🏆 애니메이션 티어리스트", library: "📚 라이브러리", memorymap: "🧠 메모리맵" };
+            document.getElementById('currentMenuTitle').textContent = titleMap[tabId];
+
+            if(tabId === 'memorymap') {
+                renderMemoryMapEngine();
+            }
+        }
+
+        function toggleTagSelector(el) { el.classList.toggle('selected'); }
+
+        function addNewTagToPool() {
+            const input = document.getElementById('newTagInput');
+            const val = input.value.trim();
+            if(!val) return;
+            const pool = document.getElementById('editorTagPool');
+            const chip = document.createElement('div');
+            chip.className = 'tag-chip selected';
+            chip.textContent = val;
+            chip.onclick = function() { toggleTagSelector(chip); };
+            pool.appendChild(chip);
+            input.value = "";
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const tags = [];
+            document.querySelectorAll('#editorTagPool .tag-chip.selected').forEach(c => tags.push(c.textContent));
+
+            const newReview = {
+                id: "rev_" + Date.now().toString(),
+                title: document.getElementById('animeTitle').value.trim(),
+                category: document.getElementById('animeCategory').value.trim() || "독립 단편작 (그룹 없음)",
+                image: document.getElementById('animeImage').value.trim() || "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=400",
+                rating: parseInt(document.getElementById('animeRating').value),
+                tier: document.getElementById('animeTier').value,
+                watchCount: parseInt(document.getElementById('animeWatchCount').value) || 1,
+                comment: document.getElementById('animeComment').value.trim(),
+                musicLink: document.getElementById('animeMusicLink').value.trim(),
+                laftelLink: document.getElementById('animeLaftelLink').value.trim(),
+                tags: tags,
+                memos: [],
+                favorite: false,
+                favTime: 0,
+                date: new Date().toISOString()
+            };
+
+            reviews.push(newReview);
+            saveData();
+            document.getElementById('reviewForm').reset();
+            document.querySelectorAll('#editorTagPool .tag-chip').forEach(c => c.classList.remove('selected'));
+            renderAll();
+            switchTab('library');
+        }
+
+        function saveData() {
+            localStorage.setItem('animeReviews', JSON.stringify(reviews));
+            localStorage.setItem('customMemoryBlocks', JSON.stringify(customBlocks));
+            localStorage.setItem('memoryBlockLinks', JSON.stringify(blockLinks));
+        }
+
+        function renderAll() {
+            document.getElementById('totalCount').textContent = reviews.length;
+            document.getElementById('favCount').textContent = reviews.filter(r => r.favorite).length;
+
+            const timeline = document.getElementById('recentTimelineContainer');
+            timeline.innerHTML = "";
+            [...reviews].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 6).forEach(item => {
+                timeline.innerHTML += `<div class="recent-mini-card" onclick="openDetailModal('${item.id}')"><img src="${item.image}" class="recent-mini-img"><div class="recent-mini-title">${item.title}</div></div>`;
+            });
+
+            const containers = { 'S-Tier': 'vTierS', 'A+-Tier': 'vTierAP', 'A-Tier': 'vTierA', 'B-Tier': 'vTierB', 'C-Tier': 'vTierC', 'F-Tier': 'vTierF', '1화찍먹': 'vTierSIP', '보다하차': 'vTierDROP' };
+            Object.keys(containers).forEach(k => document.getElementById(containers[k]).innerHTML = "");
+            
+            reviews.forEach(item => {
+                const target = containers[item.tier];
+                if(target) {
+                    const wrap = document.createElement('div'); wrap.className = 'tier-poster-wrapper';
+                    wrap.onclick = () => openDetailModal(item.id);
+                    wrap.innerHTML = `<img src="${item.image}">`;
+                    document.getElementById(target).appendChild(wrap);
+                }
+            });
+
+            renderLibrary();
+        }
+
+        function setLibraryViewMode(mode) {
+            currentLibViewMode = mode;
+            document.getElementById('btnViewSeries').classList.toggle('active', mode === 'series');
+            document.getElementById('btnViewAll').classList.toggle('active', mode === 'all');
+            document.getElementById('tagGroupFilterWrapper').style.display = (mode === 'all') ? 'flex' : 'none';
+            renderLibrary();
+        }
+
+        function renderLibrary() {
+            const container = document.getElementById('archiveDynamicContainer');
+            container.innerHTML = "";
+            
+            const query = document.getElementById('searchBar').value.toLowerCase().trim();
+            const sortBy = document.getElementById('sortSelect').value;
+            const onlyFav = document.getElementById('chkOnlyFav').checked;
+            const groupWithTags = document.getElementById('chkGroupWithTags').checked;
+
+            let srcList = reviews.filter(r => {
+                const matchQuery = r.title.toLowerCase().includes(query);
+                const matchFav = onlyFav ? r.favorite : true;
+                return matchQuery && matchFav;
+            });
+
+            if(sortBy === 'ratingDesc') {
+                srcList.sort((a,b) => b.rating - a.rating);
+            } else if(sortBy === 'ratingAsc') {
+                srcList.sort((a,b) => a.rating - b.rating);
+            } else {
+                srcList.sort((a,b) => new Date(b.date) - new Date(a.date));
+            }
+
+            if(currentLibViewMode === 'series') {
+                const groups = {};
+                srcList.forEach(item => {
+                    const cat = item.category || "독립 단편작 (그룹 없음)";
+                    if(!groups[cat]) groups[cat] = [];
+                    groups[cat].push(item);
+                });
+
+                Object.keys(groups).forEach(catName => {
+                    const section = document.createElement('div'); section.className = 'category-section';
+                    section.innerHTML = `<div class="category-title">📂 ${catName} (${groups[catName].length}개 항목)</div>`;
+                    const grid = document.createElement('div'); grid.className = 'matrix-grid';
+                    groups[catName].forEach(item => grid.appendChild(createReviewCardDOM(item)));
+                    section.appendChild(grid);
+                    container.appendChild(section);
+                });
+            } else {
+                if(groupWithTags) {
+                    const tagGroups = { "미지정 태그": [] };
+                    srcList.forEach(item => {
+                        if(!item.tags || item.tags.length === 0) {
+                            tagGroups["미지정 태그"].push(item);
+                        } else {
+                            item.tags.forEach(t => {
+                                if(!tagGroups[t]) tagGroups[t] = [];
+                                if(!tagGroups[t].includes(item)) tagGroups[t].push(item);
+                            });
+                        }
+                    });
+
+                    Object.keys(tagGroups).forEach(tagName => {
+                        if(tagGroups[tagName].length === 0) return;
+                        const section = document.createElement('div'); section.className = 'category-section';
+                        section.innerHTML = `<div class="category-title">🏷️ 태그 묶음: ${tagName} (${tagGroups[tagName].length}개 작품)</div>`;
+                        const grid = document.createElement('div'); grid.className = 'matrix-grid';
+                        tagGroups[tagName].forEach(item => grid.appendChild(createReviewCardDOM(item)));
+                        section.appendChild(grid);
+                        container.appendChild(section);
+                    });
+                } else {
+                    let favoritesPart = srcList.filter(r => r.favorite).sort((a,b) => (a.favTime || 0) - (b.favTime || 0));
+                    let nonFavoritesPart = srcList.filter(r => !r.favorite);
+                    let finalMergedList = [...favoritesPart, ...nonFavoritesPart];
+
+                    const grid = document.createElement('div'); grid.className = 'matrix-grid';
+                    finalMergedList.forEach(item => grid.appendChild(createReviewCardDOM(item)));
+                    container.appendChild(grid);
+                }
+            }
+        }
+
+        function createReviewCardDOM(item) {
+            const card = document.createElement('div'); card.className = 'review-card';
+            card.onclick = () => openDetailModal(item.id);
+            card.innerHTML = `
+                <div class="card-img-wrapper">
+                    ${item.favorite ? '<div class="card-fav-star">★</div>' : ''}
+                    <div class="tier-indicator" style="background:var(--accent-color);">${item.tier}</div>
+                    <img src="${item.image}">
+                </div>
+                <div class="card-content">
+                    <h3>${item.title}</h3>
+                    <div class="card-stats">
+                        <span class="stars">${'★'.repeat(item.rating)}</span>
+                        <span>${item.watchCount}회독</span>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        /* 🧠 메모리맵 제어 엔진 */
+        function renderMemoryMapEngine() {
+            renderMemoryMapSidebar();
+            renderMemoryMapCanvas();
+        }
+
+        function openBlockAddModal() {
+            document.getElementById('blockModalTitle').textContent = "🧠 블록 설정창";
+            document.getElementById('mbId').value = "";
+            document.getElementById('mbTitle').value = "";
+            document.getElementById('mbImage').value = "";
+            document.getElementById('mbAnime').value = "";
+            document.getElementById('mbDesc').value = "";
+            document.getElementById('blockModalOverlay').style.display = 'flex';
+        }
+
+        function openBlockEditModal(blockId) {
+            const b = customBlocks.find(x => x.id === blockId);
+            if(!b) return;
+            document.getElementById('blockModalTitle').textContent = "✍️ 블록 정보 편집";
+            document.getElementById('mbId').value = b.id;
+            document.getElementById('mbTitle').value = b.title;
+            document.getElementById('mbImage').value = b.image;
+            document.getElementById('mbAnime').value = b.anime;
+            document.getElementById('mbDesc').value = b.desc;
+            
+            document.getElementById('blockDetailOverlay').style.display = 'none';
+            document.getElementById('blockModalOverlay').style.display = 'flex';
+        }
+
+        function submitCustomBlockData() {
+            const id = document.getElementById('mbId').value;
+            const title = document.getElementById('mbTitle').value.trim() || "무제 블록";
+            const image = document.getElementById('mbImage').value.trim() || "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=400";
+            const anime = document.getElementById('mbAnime').value.trim() || "기타 애니메이션";
+            const desc = document.getElementById('mbDesc').value.trim() || "";
+
+            if(id) {
+                const b = customBlocks.find(x => x.id === id);
+                if(b) { b.title = title; b.image = image; b.anime = anime; b.desc = desc; }
+            } else {
+                customBlocks.push({
+                    id: "bl_" + Date.now(),
+                    title, image, anime, desc,
+                    placed: false,
+                    x: 150 + Math.random() * 300,
+                    y: 150 + Math.random() * 200
+                });
+            }
+            saveData();
+            document.getElementById('blockModalOverlay').style.display = 'none';
+            renderMemoryMapEngine();
+        }
+
+        function deleteCustomBlock(blockId, event) {
+            if(event) event.stopPropagation();
+            if(confirm("이 블록을 리스트 및 맵에서 완전히 제거할까요? (영구 삭제)")) {
+                customBlocks = customBlocks.filter(x => x.id !== blockId);
+                blockLinks = blockLinks.filter(lnk => lnk.from !== blockId && lnk.to !== blockId);
+                saveData();
+                renderMemoryMapEngine();
+            }
+        }
+
+        /* [요구사항 1] 왼쪽 원본 데이터는 보존하고, 오직 '오른쪽 메모리 맵 화면'에서만 블록을 제외시키는 함수 */
+        function removeBlockFromCanvasOnly(blockId, event) {
+            if(event) event.stopPropagation();
+            const b = customBlocks.find(x => x.id === blockId);
+            if(b) {
+                b.placed = false; // 맵에 배치되지 않은 상태로 스위칭
+                // 해당 블록과 연결되어 있던 선들도 유령선이 되지 않도록 청소
+                blockLinks = blockLinks.filter(lnk => lnk.from !== blockId && lnk.to !== blockId);
+                saveData();
+                renderMemoryMapEngine();
+            }
+        }
+
+        function renderMemoryMapSidebar() {
+            const sidebar = document.getElementById('memoryMapSidebar');
+            sidebar.innerHTML = "";
+
+            const groups = {};
+            customBlocks.forEach(b => {
+                const grpName = b.anime || "기타 애니메이션";
+                if(!groups[grpName]) groups[grpName] = [];
+                groups[grpName].push(b);
+            });
+
+            if(customBlocks.length === 0) {
+                sidebar.innerHTML = `<div style="font-size:0.8rem; color:var(--text-secondary); text-align:center; padding:20px;">블록이 비어있습니다. 새로 추가해보세요.</div>`;
+                return;
+            }
+
+            Object.keys(groups).forEach(grpName => {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'memory-accordion-group';
+                const isCollapsed = openCollapsedGroups[grpName] || false;
+
+                groupDiv.innerHTML = `
+                    <div class="memory-accordion-header" onclick="toggleMemoryAccordion('${grpName}')">
+                        <span>📁 ${grpName} (${groups[grpName].length})</span>
+                        <span>${isCollapsed ? '▼' : '▲'}</span>
+                    </div>
+                    <div class="memory-accordion-content ${isCollapsed ? 'collapsed' : ''}" id="grp-box-${grpName}"></div>
+                `;
+                sidebar.appendChild(groupDiv);
+                
+                const contentBox = groupDiv.querySelector(`#grp-box-${grpName}`);
+                groups[grpName].forEach(b => {
+                    const item = document.createElement('div');
+                    item.className = 'memory-item-node';
+                    if(b.placed) item.style.borderLeft = "3px solid var(--accent-color)";
+                    
+                    item.innerHTML = `
+                        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px;">${b.title}</span>
+                        <button class="node-delete-btn" onclick="deleteCustomBlock('${b.id}', event)">삭제</button>
+                    `;
+                    
+                    item.addEventListener('mouseenter', (e) => showNodePreview(b, e));
+                    item.addEventListener('mousemove', (e) => moveNodePreview(e));
+                    item.addEventListener('mouseleave', () => hideNodePreview());
+                    
+                    item.onclick = (e) => {
+                        e.stopPropagation();
+                        if(!b.placed) {
+                            b.placed = true;
+                            saveData();
+                        }
+                        handleNodeClickInteraction(b.id);
+                    };
+
+                    contentBox.appendChild(item);
+                });
+            });
+        }
+
+        function toggleMemoryAccordion(grpName) {
+            openCollapsedGroups[grpName] = !openCollapsedGroups[grpName];
+            renderMemoryMapSidebar();
+        }
+
+        function showNodePreview(block, event) {
+            const preview = document.getElementById('nodeHoverPreview');
+            document.getElementById('hpImg').src = block.image;
+            document.getElementById('hpTitle').textContent = block.title;
+            document.getElementById('hpDesc').textContent = block.desc || "설명 없음";
+            preview.style.display = 'flex';
+            moveNodePreview(event);
+        }
+
+        function moveNodePreview(event) {
+            const preview = document.getElementById('nodeHoverPreview');
+            preview.style.left = (event.clientX + 15) + "px";
+            preview.style.top = (event.clientY + 15) + "px";
+        }
+
+        function hideNodePreview() {
+            document.getElementById('nodeHoverPreview').style.display = 'none';
+        }
+
+        let selectedNodeForLink = null;
+        let lastClickedNodeId = null;
+        let lastClickedTime = 0;
+
+        function handleNodeClickInteraction(id) {
+            const now = Date.now();
+            
+            if (lastClickedNodeId === id && (now - lastClickedTime) < 300) {
+                selectedNodeForLink = null;
+                hideNodePreview();
+                openBlockDetailModal(id);
+                renderMemoryMapEngine();
+                return;
+            }
+
+            lastClickedNodeId = id;
+            lastClickedTime = now;
+
+            if(!selectedNodeForLink) {
+                selectedNodeForLink = id;
+            } else {
+                if(selectedNodeForLink !== id) {
+                    const exists = blockLinks.some(l => (l.from === selectedNodeForLink && l.to === id) || (l.from === id && l.to === selectedNodeForLink));
+                    if(!exists) {
+                        blockLinks.push({
+                            id: "lnk_" + Date.now(),
+                            from: selectedNodeForLink,
+                            to: id,
+                            name: "새 연결선"
+                        });
+                        saveData();
+                    }
+                }
+                selectedNodeForLink = null;
+            }
+            renderMemoryMapEngine();
+        }
+
+        function openBlockDetailModal(blockId) {
+            const b = customBlocks.find(x => x.id === blockId);
+            if(!b) return;
+
+            document.getElementById('bdTitle').textContent = b.title;
+            document.getElementById('bdAnime').textContent = b.anime;
+            document.getElementById('bdDesc').textContent = b.desc || "등록된 상세 내용 설명이 없습니다.";
+            document.getElementById('bdImg').src = b.image;
+            
+            document.getElementById('bdEditBtn').onclick = () => openBlockEditModal(blockId);
+            document.getElementById('blockDetailOverlay').style.display = 'flex';
+        }
+
+        function renderMemoryMapCanvas() {
+            const workspace = document.getElementById('mapCanvasWorkspace');
+            const svgLayer = document.getElementById('mapSvgLayer');
+            
+            workspace.innerHTML = "";
+            svgLayer.innerHTML = "";
+
+            const activeNodes = customBlocks.filter(x => x.placed);
+
+            blockLinks.forEach(lnk => {
+                const fromNode = activeNodes.find(x => x.id === lnk.from);
+                const toNode = activeNodes.find(x => x.id === lnk.to);
+                if(!fromNode || !toNode) return;
+
+                // 노드 크기가 변경됨에 따라 선 중심축 계산 보정 (가로 세로 오프셋 변경)
+                const x1 = fromNode.x + 80; const y1 = fromNode.y + 24;
+                const x2 = toNode.x + 80; const y2 = toNode.y + 24;
+
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", x1); line.setAttribute("y1", y1);
+                line.setAttribute("x2", x2); line.setAttribute("y2", y2);
+                line.setAttribute("class", "map-interactive-line");
+                line.onclick = (e) => { e.stopPropagation(); openLineLabelModal(lnk.id); };
+                svgLayer.appendChild(line);
+
+                const tx = (x1 + x2) / 2; const ty = (y1 + y2) / 2 - 6;
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", tx); text.setAttribute("y", ty);
+                text.setAttribute("class", "line-text-element");
+                text.setAttribute("text-anchor", "middle");
+                text.textContent = lnk.name || "연결선";
+                text.onclick = (e) => { e.stopPropagation(); openLineLabelModal(lnk.id); };
+                svgLayer.appendChild(text);
+            });
+
+            activeNodes.forEach(b => {
+                const nodeDiv = document.createElement('div');
+                nodeDiv.className = 'rendered-absolute-node';
+                if(selectedNodeForLink === b.id) nodeDiv.classList.add('selected-core');
+                
+                nodeDiv.style.left = b.x + "px";
+                nodeDiv.style.top = b.y + "px";
+                
+                /* [요구사항 2] 맵 내부 블록을 [작은 사진 + 제목 + 우측 맵제외 버튼] 레이아웃으로 변경 */
+                nodeDiv.innerHTML = `
+                    <img src="${b.image}" class="node-mini-thumb">
+                    <div class="node-mini-title">${b.title}</div>
+                    <button class="node-map-remove-btn" title="이 화면에서만 숨기기" onclick="removeBlockFromCanvasOnly('${b.id}', event)">×</button>
+                `;
+
+                nodeDiv.addEventListener('mouseenter', (e) => showNodePreview(b, e));
+                nodeDiv.addEventListener('mousemove', (e) => moveNodePreview(e));
+                nodeDiv.addEventListener('mouseleave', () => hideNodePreview());
+
+                nodeDiv.onmousedown = function(e) {
+                    // X 버튼을 누를 때는 드래그앤드롭 이벤트가 발동하지 않도록 방어 코드 추가
+                    if(e.target.classList.contains('node-map-remove-btn')) return;
+
+                    let shiftX = e.clientX - nodeDiv.getBoundingClientRect().left;
+                    let shiftY = e.clientY - nodeDiv.getBoundingClientRect().top;
+
+                    function moveAt(pageX, pageY) {
+                        const rect = workspace.getBoundingClientRect();
+                        let targetX = pageX - rect.left - shiftX;
+                        let targetY = pageY - rect.top - shiftY;
+                        
+                        nodeDiv.style.left = targetX + 'px';
+                        nodeDiv.style.top = targetY + 'px';
+                        b.x = targetX;
+                        b.y = targetY;
+                    }
+
+                    function onMouseMove(e) {
+                        moveAt(e.pageX, e.pageY);
+                        renderLinesOnly();
+                    }
+
+                    document.addEventListener('mousemove', onMouseMove);
+                    nodeDiv.onmouseup = function() {
+                        document.removeEventListener('mousemove', onMouseMove);
+                        nodeDiv.onmouseup = null;
+                        saveData();
+                    };
+                };
+
+                nodeDiv.onclick = (e) => {
+                    e.stopPropagation();
+                    handleNodeClickInteraction(b.id);
+                };
+
+                workspace.appendChild(nodeDiv);
+            });
+        }
+
+        function renderLinesOnly() {
+            const svgLayer = document.getElementById('mapSvgLayer');
+            svgLayer.innerHTML = "";
+            const activeNodes = customBlocks.filter(x => x.placed);
+
+            blockLinks.forEach(lnk => {
+                const fromNode = activeNodes.find(x => x.id === lnk.from);
+                const toNode = activeNodes.find(x => x.id === lnk.to);
+                if(!fromNode || !toNode) return;
+
+                const x1 = fromNode.x + 80; const y1 = fromNode.y + 24;
+                const x2 = toNode.x + 80; const y2 = toNode.y + 24;
+
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", x1); line.setAttribute("y1", y1);
+                line.setAttribute("x2", x2); line.setAttribute("y2", y2);
+                line.setAttribute("class", "map-interactive-line");
+                line.onclick = (e) => { e.stopPropagation(); openLineLabelModal(lnk.id); };
+                svgLayer.appendChild(line);
+
+                const tx = (x1 + x2) / 2; const ty = (y1 + y2) / 2 - 6;
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", tx); text.setAttribute("y", ty);
+                text.setAttribute("class", "line-text-element");
+                text.setAttribute("text-anchor", "middle");
+                text.textContent = lnk.name || "연결선";
+                text.onclick = (e) => { e.stopPropagation(); openLineLabelModal(lnk.id); };
+                svgLayer.appendChild(text);
+            });
+        }
+
+        function openLineLabelModal(lineId) {
+            const lnk = blockLinks.find(x => x.id === lineId);
+            if(!lnk) return;
+            document.getElementById('targetLineId').value = lineId;
+            document.getElementById('lineNameInput').value = lnk.name || "";
+            document.getElementById('lineModalOverlay').style.display = 'flex';
+        }
+
+        function saveLineName() {
+            const id = document.getElementById('targetLineId').value;
+            const lnk = blockLinks.find(x => x.id === id);
+            if(lnk) {
+                lnk.name = document.getElementById('lineNameInput').value.trim() || "연결선";
+                saveData();
+            }
+            document.getElementById('lineModalOverlay').style.display = 'none';
+            renderMemoryMapEngine();
+        }
+
+        function deleteLineLink() {
+            const id = document.getElementById('targetLineId').value;
+            blockLinks = blockLinks.filter(x => x.id !== id);
+            saveData();
+            document.getElementById('lineModalOverlay').style.display = 'none';
+            renderMemoryMapEngine();
+        }
+
+        /* 라이브러리 상세조회 및 관리 핸들러 */
+        let currentActiveLibId = null;
+
+        function openDetailModal(id) {
+            currentActiveLibId = id;
+            const item = reviews.find(r => r.id === id);
+            if(!item) return;
+
+            if(!item.stats) item.stats = { fun: 7, immerse: 7, art: 7, music: 7, char: 7 };
+            if(!item.memos) item.memos = [];
+
+            document.getElementById('lOldHeroBanner').style.backgroundImage = `url('${item.image}')`;
+            document.getElementById('lOldTitle').textContent = item.title;
+            document.getElementById('lOldTier').textContent = item.tier;
+            document.getElementById('lOldRating').textContent = '★'.repeat(item.rating);
+            document.getElementById('lOldWatch').textContent = item.watchCount;
+            document.getElementById('lOldCat').textContent = item.category;
+            document.getElementById('lOldComment').textContent = item.comment || "작성된 평론이 없습니다.";
+            
+            if(item.musicLink) {
+                document.getElementById('lOldMusicText').innerHTML = `<a href="${item.musicLink}" target="_blank" style="color:#a5b4fc; text-decoration:underline;">연동 음원 링크 열기 🔗</a>`;
+            } else {
+                document.getElementById('lOldMusicText').textContent = "연동 음원 없음";
+            }
+
+            const laftelBtn = document.getElementById('lOldLaftelBtn');
+            const laftelText = document.getElementById('lOldLaftelText');
+            if(item.laftelLink) {
+                laftelBtn.href = item.laftelLink; laftelBtn.style.opacity = "1"; laftelBtn.style.pointerEvents = "auto";
+                laftelText.textContent = "라프텔로 즉시 감상하기 🚀";
+            } else {
+                laftelBtn.href = "#"; laftelBtn.style.opacity = "0.4"; laftelBtn.style.pointerEvents = "none";
+                laftelText.textContent = "라프텔 연동 링크 없음";
+            }
+
+            const favBtn = document.getElementById('libFavBtn');
+            if(item.favorite) {
+                favBtn.classList.add('active'); favBtn.innerHTML = '★ 즐겨찾기 설정 해제';
+            } else {
+                favBtn.classList.remove('active'); favBtn.innerHTML = '☆ 즐겨찾기 설정';
+            }
+
+            document.getElementById('leTier').value = item.tier;
+            document.getElementById('leCat').value = item.category;
+            document.getElementById('leRating').value = item.rating.toString();
+            document.getElementById('leWatch').value = item.watchCount;
+            document.getElementById('leMusicLink').value = item.musicLink || "";
+            document.getElementById('leLaftelLink').value = item.laftelLink || "";
+            document.getElementById('leComment').value = item.comment || "";
+            
+            document.getElementById('leStFun').value = item.stats.fun;
+            document.getElementById('leStImmerse').value = item.stats.immerse;
+            document.getElementById('leStArt').value = item.stats.art;
+            document.getElementById('leStMusic').value = item.stats.music;
+            document.getElementById('leStChar').value = item.stats.char;
+
+            document.getElementById('libModalViewZone').style.display = 'block';
+            document.getElementById('libModalEditZone').style.display = 'none';
+            document.getElementById('libToggleEditBtn').style.display = 'inline-block';
+            document.getElementById('libSaveBtn').style.display = 'none';
+
+            renderMemosList(item);
+            drawRadarChart('viewRadarSvg', item.stats);
+            document.getElementById('detailModalOverlay').style.display = 'flex';
+        }
+
+        function enableLibEditMode() {
+            document.getElementById('libModalViewZone').style.display = 'none';
+            document.getElementById('libModalEditZone').style.display = 'block';
+            document.getElementById('libToggleEditBtn').style.display = 'none';
+            document.getElementById('libSaveBtn').style.display = 'inline-block';
+            updateLiveRadarChart();
+        }
+
+        function updateLiveRadarChart() {
+            const liveStats = {
+                fun: parseInt(document.getElementById('leStFun').value) || 1,
+                immerse: parseInt(document.getElementById('leStImmerse').value) || 1,
+                art: parseInt(document.getElementById('leStArt').value) || 1,
+                music: parseInt(document.getElementById('leStMusic').value) || 1,
+                char: parseInt(document.getElementById('leStChar').value) || 1
+            };
+            drawRadarChart('editRadarSvg', liveStats);
+        }
+
+        function drawRadarChart(svgId, stats) {
+            const svg = document.getElementById(svgId); svg.innerHTML = "";
+            const center = 60; const maxVal = 10; const r = 42;
+            const angles = [-Math.PI/2, -Math.PI/2 + (2*Math.PI/5), -Math.PI/2 + (4*Math.PI/5), -Math.PI/2 + (6*Math.PI/5), -Math.PI/2 + (8*Math.PI/5)];
+            const labels = ["재미", "몰입", "작화", "음악", "캐릭터"];
+            
+            let backgroundPoints = [];
+            angles.forEach(angle => backgroundPoints.push(`${center + r * Math.cos(angle)},${center + r * Math.sin(angle)}`));
+            const polyBg = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+            polyBg.setAttribute("points", backgroundPoints.join(" "));
+            polyBg.setAttribute("fill", "none"); polyBg.setAttribute("stroke", "#2b2f3a");
+            svg.appendChild(polyBg);
+
+            const values = [stats.fun, stats.immerse, stats.art, stats.music, stats.char];
+            let dataPoints = [];
+            angles.forEach((angle, i) => {
+                const length = (values[i] / maxVal) * r;
+                dataPoints.push(`${center + length * Math.cos(angle)},${center + length * Math.sin(angle)}`);
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", center + (r + 12) * Math.cos(angle));
+                text.setAttribute("y", center + (r + 12) * Math.sin(angle) + 3);
+                text.setAttribute("fill", "#949aab"); text.setAttribute("font-size", "8px"); text.setAttribute("text-anchor", "middle");
+                text.textContent = labels[i];
+                svg.appendChild(text);
+            });
+
+            const polyData = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+            polyData.setAttribute("points", dataPoints.join(" "));
+            polyData.setAttribute("fill", "rgba(99, 102, 241, 0.3)"); polyData.setAttribute("stroke", "#6366f1"); polyData.setAttribute("stroke-width", "2");
+            svg.appendChild(polyData);
+        }
+
+        function saveLibEdit() {
+            const item = reviews.find(r => r.id === currentActiveLibId);
+            if(item) {
+                item.tier = document.getElementById('leTier').value;
+                item.category = document.getElementById('leCat').value.trim() || "일반";
+                item.rating = parseInt(document.getElementById('leRating').value);
+                item.watchCount = parseInt(document.getElementById('leWatch').value) || 1;
+                item.musicLink = document.getElementById('leMusicLink').value.trim();
+                item.laftelLink = document.getElementById('leLaftelLink').value.trim();
+                item.comment = document.getElementById('leComment').value.trim();
+                item.stats = {
+                    fun: parseInt(document.getElementById('leStFun').value) || 7,
+                    immerse: parseInt(document.getElementById('leStImmerse').value) || 7,
+                    art: parseInt(document.getElementById('leStArt').value) || 7,
+                    music: parseInt(document.getElementById('leStMusic').value) || 7,
+                    char: parseInt(document.getElementById('leStChar').value) || 7
+                };
+                saveData(); renderAll(); openDetailModal(currentActiveLibId);
+            }
+        }
+
+        function toggleLibFavorite() {
+            const item = reviews.find(r => r.id === currentActiveLibId);
+            if(item) {
+                item.favorite = !item.favorite;
+                item.favTime = item.favorite ? Date.now() : 0;
+                saveData(); renderAll(); openDetailModal(currentActiveLibId);
+            }
+        }
+
+        function deleteLibArchive() {
+            if(confirm("정말로 이 애니메이션 로그를 데이터 허브에서 영구 삭제하시겠습니까?")) {
+                reviews = reviews.filter(r => r.id !== currentActiveLibId);
+                saveData(); document.getElementById('detailModalOverlay').style.display = 'none'; renderAll();
+            }
+        }
+
+        function submitThreadMemo() {
+            const input = document.getElementById('threadMemoInput'); const txt = input.value.trim(); if(!txt) return;
+            const item = reviews.find(r => r.id === currentActiveLibId);
+            if(item) {
+                if(!item.memos) item.memos = [];
+                item.memos.push({ memoId: "memo_" + Date.now(), content: txt });
+                saveData(); input.value = ""; renderMemosList(item);
+            }
+        }
+
+        function deleteThreadMemo(memoId) {
+            const item = reviews.find(r => r.id === currentActiveLibId);
+            if(item && item.memos) {
+                item.memos = item.memos.filter(m => m.memoId !== memoId);
+                saveData(); renderMemosList(item);
+            }
+        }
+
+        function renderMemosList(item) {
+            const container = document.getElementById('threadMemosContainer'); container.innerHTML = "";
+            if(!item.memos || item.memos.length === 0) {
+                container.innerHTML = `<div class="sub-thread-empty-box">기록된 코멘트가 없습니다.</div>`; return;
+            }
+            const listWrapper = document.createElement('div'); listWrapper.className = 'sub-thread-feed-list';
+            item.memos.forEach(m => {
+                listWrapper.innerHTML += `<div class="thread-memo-item"><div class="thread-memo-text">${m.content}</div><button class="thread-memo-del" onclick="deleteThreadMemo('${m.memoId}')">삭제</button></div>`;
+            });
+            container.appendChild(listWrapper);
+        }
+
+        function closeDetailModal(e) { if(e.target.id === 'detailModalOverlay') document.getElementById('detailModalOverlay').style.display = 'none'; }
+        function closeBlockModal(e) { if(e.target.id === 'blockModalOverlay') document.getElementById('blockModalOverlay').style.display = 'none'; }
+    </script>
+</body>
+</html>
