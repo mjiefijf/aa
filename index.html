@@ -192,7 +192,7 @@
 
         .map-canvas-mock { width: 100%; height: 100%; position: relative; border: 1px dashed rgba(255,255,255,0.05); border-radius: 8px; background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 0); background-size: 16px 16px; z-index: 2; pointer-events: none; }
         
-        /* [요구사항 2] 실제 시각화 위치 고정형 컴포넌트: 작은 사진 + 제목 + 맵 제외 버튼 구조 가로 배치 */
+        /* 실제 시각화 위치 고정형 컴포넌트: 작은 사진 + 제목 + 맵 제외 버튼 구조 가로 배치 */
         .rendered-absolute-node {
             position: absolute; display: flex; align-items: center; gap: 10px; padding: 8px 14px; 
             background: linear-gradient(135deg, #1e1b4b, #311042); border: 2px solid #4338ca; border-radius: 12px; 
@@ -206,7 +206,7 @@
         .node-mini-thumb { width: 32px; height: 32px; object-fit: cover; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; }
         .node-mini-title { flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.8rem; color: #fff; text-align: left; }
         
-        /* [요구사항 1] 맵 화면에서만 빼버리는 전용 닫기 단추 */
+        /* 맵 화면에서만 빼버리는 전용 닫기 단추 */
         .node-map-remove-btn {
             background: none; border: none; color: #949aab; font-size: 1.1rem; cursor: pointer; 
             padding: 2px 6px; font-weight: bold; line-height: 1; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s;
@@ -274,7 +274,7 @@
         .sub-thread-feed-list { display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto; }
         .thread-memo-item { background: #161920; border: 1px solid #20242e; border-radius: 6px; padding: 10px 14px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: flex-start; }
         .thread-memo-text { color: #d1d5db; line-height: 1.4; white-space: pre-wrap; word-break: break-all; }
-        .thread-memo-del { background: transparent; border: none; color: #ef4444; font-size: 0.75rem; cursor: pointer; font-weight: 500; margin-left: 10px; flex-shrink: 0; }
+        .thread-memo-item .thread-memo-del { background: transparent; border: none; color: #ef4444; font-size: 0.75rem; cursor: pointer; font-weight: 500; margin-left: 10px; flex-shrink: 0; padding: 0; }
         
         .modal-footer-old { padding: 16px 24px 24px 24px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #1f222a; background: #111318; }
         .fav-btn-old { background: transparent; border: 1px solid #fbbf24; color: #fbbf24; padding: 10px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
@@ -284,6 +284,7 @@
 </head>
 <body>
 
+    <!-- 사이드바 네비게이션 -->
     <nav class="sidebar">
         <div class="brand-zone">
             <h1>ANIME HUB</h1>
@@ -303,6 +304,7 @@
         </a>
     </nav>
 
+    <!-- 우측 메인 프레임 워크플레이스 -->
     <div class="main-content">
         <header class="top-navbar">
             <div class="page-title" id="currentMenuTitle">🏠 홈 & 취향 분석 피드</div>
@@ -312,6 +314,7 @@
             </div>
         </header>
 
+        <!-- TAB 1: 홈 메인 피드 -->
         <section id="tab-home" class="tab-content active">
             <div class="ai-banner">
                 <h2>AI 기반 나만의 맞춤 가이드 🤖</h2>
@@ -321,6 +324,7 @@
             <div class="recent-timeline" id="recentTimelineContainer"></div>
         </section>
 
+        <!-- TAB 2: 애니 평가 추가 -->
         <section id="tab-editor" class="tab-content">
             <div class="form-layout panel">
                 <h3 class="section-title" style="border-left-color: #5850ec;">│ 애니 평가 추가</h3>
@@ -449,6 +453,7 @@
             </div>
         </section>
 
+        <!-- TAB 3: 애니메이션 티어리스트 -->
         <section id="tab-tierlist" class="tab-content">
             <div class="panel">
                 <h3 class="section-title">애니메이션 티어리스트 맵</h3>
@@ -465,6 +470,7 @@
             </div>
         </section>
 
+        <!-- TAB 4: 라이브러리 -->
         <section id="tab-library" class="tab-content">
             <div class="panel">
                 <div class="library-header">
@@ -493,6 +499,7 @@
             </div>
         </section>
 
+        <!-- TAB 5: 메모리맵 -->
         <section id="tab-memorymap" class="tab-content">
             <div class="memory-map-container">
                 <div class="memory-sidebar-list">
@@ -508,6 +515,7 @@
                     </div>
                 </div>
                 
+                <!-- 마우스 호버 전용 프리뷰 풍선 도움말 박스 -->
                 <div class="node-hover-preview-box" id="nodeHoverPreview">
                     <img src="" class="node-preview-img" id="hpImg">
                     <div class="node-preview-title" id="hpTitle" style="font-weight:900; color:#fff;"></div>
@@ -517,10 +525,12 @@
         </section>
     </div>
 
+    <!-- 이미지 원본 모달 팝업 라이트박스 -->
     <div class="lightbox-overlay" id="globalLightbox" onclick="this.style.display='none'">
         <img src="" class="lightbox-img" id="lightboxTargetImg">
     </div>
 
+    <!-- 메모리맵 블록 추가 설정창 모달 -->
     <div class="modal-overlay" id="blockModalOverlay" onclick="closeBlockModal(event)">
         <div class="modal-container-old" style="max-width:500px; padding:24px;">
             <div class="modal-close-btn-old" onclick="document.getElementById('blockModalOverlay').style.display='none'">&times;</div>
@@ -546,6 +556,7 @@
         </div>
     </div>
 
+    <!-- 메모리맵 블록 더블클릭 상세정보 조회용 모달 -->
     <div class="modal-overlay" id="blockDetailOverlay" onclick="if(event.target.id==='blockDetailOverlay') this.style.display='none'">
         <div class="modal-container-old" style="max-width:550px; overflow:hidden;">
             <div class="modal-close-btn-old" onclick="document.getElementById('blockDetailOverlay').style.display='none'">&times;</div>
@@ -572,6 +583,7 @@
         </div>
     </div>
 
+    <!-- 연결선 지정 모달창 -->
     <div class="modal-overlay" id="lineModalOverlay" onclick="if(event.target.id==='lineModalOverlay') this.style.display='none'">
         <div class="modal-container-old" style="max-width:400px; padding:20px;">
             <h3 class="section-title">🔗 연결 관계명 지정</h3>
@@ -587,6 +599,7 @@
         </div>
     </div>
 
+    <!-- 애니 라이브러리 상세 정보 및 수정 UI 통합 모달 창 -->
     <div class="modal-overlay" id="detailModalOverlay" onclick="closeDetailModal(event)">
         <div class="modal-container-old">
             <div class="modal-close-btn-old" onclick="document.getElementById('detailModalOverlay').style.display='none'">&times;</div>
@@ -598,6 +611,7 @@
                 </div>
             </div>
 
+            <!-- VIEW MODE ZONE -->
             <div id="libModalViewZone">
                 <div class="modal-grid-layout">
                     <div class="info-spec-card">
@@ -625,6 +639,7 @@
                 <div class="main-comment-block-old" id="lOldComment"></div>
             </div>
 
+            <!-- EDIT MODE ZONE -->
             <div id="libModalEditZone" style="display:none;">
                 <div class="modal-grid-layout">
                     <div class="edit-spec-card">
@@ -637,6 +652,11 @@
                         <div class="edit-row-item">
                             <strong>시리즈:</strong>
                             <input type="text" id="leCat">
+                        </div>
+                        <!-- [요구사항 3] 포스터 원본 사진 링크도 수정할 수 있는 입력란 추가 -->
+                        <div class="edit-row-item">
+                            <strong>사진 URL:</strong>
+                            <input type="url" id="leImage" placeholder="포스터 이미지 주소를 복사해 넣으세요.">
                         </div>
                         <div class="edit-row-item">
                             <strong>평점:</strong>
@@ -676,12 +696,25 @@
                     </div>
                 </div>
 
+                <!-- [요구사항 2] 수정 모드 내부 태그 수정 편집 전용 풀 에디터 컨테이너 이식 -->
+                <div style="padding: 0 24px; margin-bottom: 12px;">
+                    <label style="margin-bottom:6px; display:block;">🏷️ 등록 태그 편집</label>
+                    <div class="tag-setup-container" style="margin-bottom:0;">
+                        <div class="tag-pool" id="modalEditTagPool"></div>
+                        <div class="tag-adder-row">
+                            <input type="text" id="modalNewTagInput" placeholder="새 태그 입력">
+                            <button type="button" class="btn-mini" onclick="addNewTagToModalPool()">추가</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="main-comment-edit-box">
                     <label>📝 종합 평론 편집기</label>
                     <textarea id="leComment" rows="3"></textarea>
                 </div>
             </div>
 
+            <!-- 자유 의견 공유 스레드 메모장 -->
             <div class="sub-comment-thread-zone">
                 <div class="sub-thread-title">💭 자유 코멘트 스레드 메모장</div>
                 <div class="sub-thread-input-row">
@@ -691,6 +724,7 @@
                 <div id="threadMemosContainer"></div>
             </div>
 
+            <!-- 푸터 제어 영역 -->
             <div class="modal-footer-old">
                 <button id="libFavBtn" class="fav-btn-old" onclick="toggleLibFavorite()">★ 즐겨찾기 설정</button>
                 <div style="display:flex; gap:12px; align-items:center;">
@@ -760,11 +794,26 @@
             input.value = "";
         }
 
+        /* [요구사항 2] 모달창 수정모드 내부에서 실시간으로 태그를 추가해 풀에 넣는 핸들러 */
+        function addNewTagToModalPool() {
+            const input = document.getElementById('modalNewTagInput');
+            const val = input.value.trim();
+            if(!val) return;
+            const pool = document.getElementById('modalEditTagPool');
+            const chip = document.createElement('div');
+            chip.className = 'tag-chip selected';
+            chip.textContent = val;
+            chip.onclick = function() { toggleTagSelector(chip); };
+            pool.appendChild(chip);
+            input.value = "";
+        }
+
         function handleFormSubmit(e) {
             e.preventDefault();
             const tags = [];
             document.querySelectorAll('#editorTagPool .tag-chip.selected').forEach(c => tags.push(c.textContent));
 
+            /* [요구사항 1] 스텟(재미, 몰입도 등)이 정상 누락 없이 최초 등록 시 완벽 저정되도록 인젝션 패치 적용 */
             const newReview = {
                 id: "rev_" + Date.now().toString(),
                 title: document.getElementById('animeTitle').value.trim(),
@@ -777,6 +826,13 @@
                 musicLink: document.getElementById('animeMusicLink').value.trim(),
                 laftelLink: document.getElementById('animeLaftelLink').value.trim(),
                 tags: tags,
+                stats: {
+                    fun: parseInt(document.getElementById('stFun').value) || 7,
+                    immerse: parseInt(document.getElementById('stImmerse').value) || 7,
+                    art: parseInt(document.getElementById('stArt').value) || 7,
+                    music: parseInt(document.getElementById('stMusic').value) || 7,
+                    char: parseInt(document.getElementById('stChar').value) || 7
+                },
                 memos: [],
                 favorite: false,
                 favTime: 0,
@@ -989,13 +1045,11 @@
             }
         }
 
-        /* [요구사항 1] 왼쪽 원본 데이터는 보존하고, 오직 '오른쪽 메모리 맵 화면'에서만 블록을 제외시키는 함수 */
         function removeBlockFromCanvasOnly(blockId, event) {
             if(event) event.stopPropagation();
             const b = customBlocks.find(x => x.id === blockId);
             if(b) {
-                b.placed = false; // 맵에 배치되지 않은 상태로 스위칭
-                // 해당 블록과 연결되어 있던 선들도 유령선이 되지 않도록 청소
+                b.placed = false; 
                 blockLinks = blockLinks.filter(lnk => lnk.from !== blockId && lnk.to !== blockId);
                 saveData();
                 renderMemoryMapEngine();
@@ -1150,7 +1204,6 @@
                 const toNode = activeNodes.find(x => x.id === lnk.to);
                 if(!fromNode || !toNode) return;
 
-                // 노드 크기가 변경됨에 따라 선 중심축 계산 보정 (가로 세로 오프셋 변경)
                 const x1 = fromNode.x + 80; const y1 = fromNode.y + 24;
                 const x2 = toNode.x + 80; const y2 = toNode.y + 24;
 
@@ -1179,7 +1232,6 @@
                 nodeDiv.style.left = b.x + "px";
                 nodeDiv.style.top = b.y + "px";
                 
-                /* [요구사항 2] 맵 내부 블록을 [작은 사진 + 제목 + 우측 맵제외 버튼] 레이아웃으로 변경 */
                 nodeDiv.innerHTML = `
                     <img src="${b.image}" class="node-mini-thumb">
                     <div class="node-mini-title">${b.title}</div>
@@ -1191,7 +1243,6 @@
                 nodeDiv.addEventListener('mouseleave', () => hideNodePreview());
 
                 nodeDiv.onmousedown = function(e) {
-                    // X 버튼을 누를 때는 드래그앤드롭 이벤트가 발동하지 않도록 방어 코드 추가
                     if(e.target.classList.contains('node-map-remove-btn')) return;
 
                     let shiftX = e.clientX - nodeDiv.getBoundingClientRect().left;
@@ -1298,6 +1349,7 @@
 
             if(!item.stats) item.stats = { fun: 7, immerse: 7, art: 7, music: 7, char: 7 };
             if(!item.memos) item.memos = [];
+            if(!item.tags) item.tags = [];
 
             document.getElementById('lOldHeroBanner').style.backgroundImage = `url('${item.image}')`;
             document.getElementById('lOldTitle').textContent = item.title;
@@ -1332,6 +1384,7 @@
 
             document.getElementById('leTier').value = item.tier;
             document.getElementById('leCat').value = item.category;
+            document.getElementById('leImage').value = item.image || ""; // [요구사항 3] 이미지 폼 매칭
             document.getElementById('leRating').value = item.rating.toString();
             document.getElementById('leWatch').value = item.watchCount;
             document.getElementById('leMusicLink').value = item.musicLink || "";
@@ -1343,6 +1396,29 @@
             document.getElementById('leStArt').value = item.stats.art;
             document.getElementById('leStMusic').value = item.stats.music;
             document.getElementById('leStChar').value = item.stats.char;
+
+            // [요구사항 2] 모달창 전용 수정 태그풀 빌더 초기화 작동
+            const modalTagPool = document.getElementById('modalEditTagPool');
+            modalTagPool.innerHTML = "";
+            item.tags.forEach(t => {
+                const chip = document.createElement('div');
+                chip.className = 'tag-chip selected';
+                chip.textContent = t;
+                chip.onclick = function() { toggleTagSelector(chip); };
+                modalTagPool.appendChild(chip);
+            });
+
+            // 선택가능한 보조 추천 풀 추가 (기존 등록 폼에 있던 기본 칩 연동)
+            const baseChips = ["액션", "판타지", "개그", "SF", "다크 히어로", "로맨스", "명작"];
+            baseChips.forEach(bc => {
+                if(!item.tags.includes(bc)) {
+                    const chip = document.createElement('div');
+                    chip.className = 'tag-chip';
+                    chip.textContent = bc;
+                    chip.onclick = function() { toggleTagSelector(chip); };
+                    modalTagPool.appendChild(chip);
+                }
+            });
 
             document.getElementById('libModalViewZone').style.display = 'block';
             document.getElementById('libModalEditZone').style.display = 'none';
@@ -1408,13 +1484,19 @@
         function saveLibEdit() {
             const item = reviews.find(r => r.id === currentActiveLibId);
             if(item) {
+                // [요구사항 2] 모달 편집용 태그 컨테이너에서 선택된 칩들을 추출하여 데이터 갱신
+                const editedTags = [];
+                document.querySelectorAll('#modalEditTagPool .tag-chip.selected').forEach(c => editedTags.push(c.textContent));
+
                 item.tier = document.getElementById('leTier').value;
                 item.category = document.getElementById('leCat').value.trim() || "일반";
+                item.image = document.getElementById('leImage').value.trim() || "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=400"; // [요구사항 3] 사진수정 반영
                 item.rating = parseInt(document.getElementById('leRating').value);
                 item.watchCount = parseInt(document.getElementById('leWatch').value) || 1;
                 item.musicLink = document.getElementById('leMusicLink').value.trim();
                 item.laftelLink = document.getElementById('leLaftelLink').value.trim();
                 item.comment = document.getElementById('leComment').value.trim();
+                item.tags = editedTags; // 태그 동기화
                 item.stats = {
                     fun: parseInt(document.getElementById('leStFun').value) || 7,
                     immerse: parseInt(document.getElementById('leStImmerse').value) || 7,
